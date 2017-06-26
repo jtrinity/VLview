@@ -20,8 +20,10 @@ class Experiment:
         self.timing_channel = 2
         self.threshold = 0.5
         self.sampling_frequency = 1000
+  
         self.binfilename = binfilename
         self.csvfilename = csvfilename
+        
         self.short_name = path.split(csvfilename)[1]
         self.signal, self.timing = self.channels_from_trigger(binfilename, csvfilename)
         self.bin_timestamps, self.csv_timestamps = self.get_timestamps(self.signal, self.timing)
@@ -80,17 +82,17 @@ class Experiment:
             if timing[i+1] >= self.threshold and timing[i] < self.threshold:
                 bin_timestamps.append(i)
         
-        print "deviant lengths"
+#        print "deviant lengths"
         lengths = list()
         for i in range(1,len(bin_timestamps)):
             lengths.append(bin_timestamps[i]-bin_timestamps[i-1])
-        for i in range(len(lengths)):
-            if lengths[i] < 495 or lengths[i] > 505:
-                print str(i) + " " + str(lengths[i])
+#        for i in range(len(lengths)):
+#            if lengths[i] < 495 or lengths[i] > 505:
+#                print str(i) + " " + str(lengths[i])
         
         
-        print "trigger count:"
-        print len(bin_timestamps)
+#        print "trigger count:"
+#        print len(bin_timestamps)
         
         csv_timestamps = list()
         
@@ -111,7 +113,8 @@ class Experiment:
 #        end_padding = signal[bin_timestamps[-1]:signal[-1]]
         stims = [Stim("Stim "+str(i) + " "+self.short_name, signal[bin_timestamps[i]:bin_timestamps[i+1]], bin_timestamps[i], bin_timestamps[i+1], csv_timestamps[i]) for i in range(len(bin_timestamps)-1)]
         stims.append(Stim("Start "+self.short_name, signal[0:bin_timestamps[0]], 0, bin_timestamps[0], (0, 'gray', '0')))
-        stims.append(Stim("End "+ self.short_name, signal[bin_timestamps[-1]:bin_timestamps[-1]], bin_timestamps[-1], len(signal), csv_timestamps[-1]))
+        stims.append(Stim("End "+ self.short_name, signal[bin_timestamps[-1]:len(signal)-1], bin_timestamps[-1], len(signal)-1, csv_timestamps[-1]))
+
         return stims
     
     def build_stim_tree(self, stims):
@@ -155,6 +158,10 @@ class Stim:
         self.name = name
         self.signal = signal
         self.mean = np.average(signal, axis = 0)
+                
+        self.min=(signal.argmin(), signal.min(axis=0))
+        self.max=(signal.argmax(), signal.max(axis=0))
+        
         self.onset = onset
         self.offset = offset
         self.event = event
@@ -186,7 +193,7 @@ class CombinedStim(Stim):
         
         if method == "average":
             min_len = min([len(stim.signal) for stim in stims])
-            print min_len
+            #print min_len
             signal = np.average([(stim.signal[0:min_len] - np.average(stim.signal[0:baseline])) for stim in stims], axis = 0)
 
         

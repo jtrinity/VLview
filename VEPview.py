@@ -78,7 +78,22 @@ class MainApp(tk.Tk):
         self.load_button = Button(self.button_frame, "Load Files", self.load, (1,0))
                 
         self.button1 = Button(self.button_frame, "Combine Selected", self.combine_selected, (1,1))
-             
+            
+        self.slider_max = 500
+        
+        #sliders for min and max window selection
+        self.min_slider = tk.Scale(self.button_frame, from_=0, to=self.slider_max,
+                                   label="window min", orient=tk.HORIZONTAL)
+        self.min_slider.bind("<ButtonRelease-1>", self.on_slider_move)
+        self.min_slider.set(25)
+        self.min_slider.grid(row = 1, column = 2)
+        
+        self.max_slider = tk.Scale(self.button_frame, from_=0, to=self.slider_max,
+                           label="window max", orient=tk.HORIZONTAL)
+        self.max_slider.bind("<ButtonRelease-1>", self.on_slider_move)
+        self.max_slider.set(100)
+        self.max_slider.grid(row = 1, column = 3)
+        
         #-----end widgets-----
 
         #variables
@@ -129,6 +144,7 @@ class MainApp(tk.Tk):
     
     def plot(self, data):
         self.subplot.clear()
+        
         for datum in data:
             self.subplot.plot(datum)
         self.subplot.set_yticklabels([])
@@ -162,7 +178,14 @@ class MainApp(tk.Tk):
             return
         
         combined = VEPdata.combine([VEPdata.names[name] for name in highlight])
-        self.windows["Graph"].plot([combined.signal])
+        self.windows["Graph"].plot([combined])
+    
+    def on_slider_move(self, evt):
+        if self.max_slider.get() <= self.min_slider.get():
+            self.min_slider.set(25)
+            self.max_slider.set(100)
+        self.windows["Graph"].plot(self.windows["Graph"].last_plots)
+        pass
               
 #-----Windows-----
 #Left Window
@@ -246,7 +269,7 @@ class ExperimentWindow(Window):
         self.type_list.delete(0, tk.END)
         selection = self.get_selection(self.file_list)
         
-        self.parent.windows["Graph"].plot([VEPdata.experiments[filename].signal for filename in selection])
+        self.parent.windows["Graph"].plot([VEPdata.experiments[filename] for filename in selection])
         for filename in selection:
             for stim in VEPdata.experiments[filename].root:
                 self.type_list.insert(tk.END, stim.name)
@@ -264,7 +287,7 @@ class ExperimentWindow(Window):
         selection = self.get_selection(self.type_list)
         
         #graph selected stims
-        self.parent.windows["Graph"].plot([VEPdata.names[name].signal for name in selection])
+        self.parent.windows["Graph"].plot([VEPdata.names[name] for name in selection])
                 
         to_insert = list()
         
@@ -294,7 +317,7 @@ class ExperimentWindow(Window):
         
         self.parent.file_trace(onsets, offsets)
         
-        self.parent.windows["Graph"].plot([VEPdata.names[name].signal for name in selection])
+        self.parent.windows["Graph"].plot([VEPdata.names[name] for name in selection])
         
         pass
     
@@ -337,6 +360,7 @@ class GraphWindow(Window):
         graph_frame.pack(side = tk.TOP)
         
         #figure and canvas
+        self.last_plots = list()
         self.figure = Figure(figsize = (10,5), dpi = 100)
         self.subplot = self.figure.add_subplot(111)
         self.subplot.plot([0 for i in range(500)])
@@ -366,8 +390,20 @@ class GraphWindow(Window):
     
     def plot(self, data):
         self.subplot.clear()
+        self.last_plots = data
+        
+        wmin = self.parent.min_slider.get()
+        wmax = self.parent.max_slider.get()
+        
+            
         for datum in data:
-            self.subplot.plot(datum)
+            datum.min = VEPdata.min_from_window(datum.signal, lower = wmin, upper = wmax)
+            datum.max = VEPdata.max_from_window(datum.signal, lower = wmin, upper = wmax)
+            
+            #plt.plot(stim.signal)
+            self.subplot.plot(datum.min[0],datum.min[1],marker='+', mew = 5, ms = 20, color='green')
+            self.subplot.plot(datum.max[0],datum.max[1],marker='+', mew = 5, ms = 20, color='red')
+            self.subplot.plot(datum.signal)
 
         self.canvas.draw()
         
