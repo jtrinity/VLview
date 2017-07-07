@@ -17,10 +17,10 @@ matplotlib.use("TkAgg", warn=False)
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
 from matplotlib import style
+from matplotlib import pyplot as plt
 
-#global figures
-LARGE_FONT = ("Verdana", 12)
-SMALL_FONT = ("Verdana", 9)
+import numpy as np
+
 style.use("bmh")
 
 #-----WIDGETS-----
@@ -77,22 +77,27 @@ class MainApp(tk.Tk):
         
         self.load_button = Button(self.button_frame, "Load Files", self.load, (1,0))
                 
-        self.button1 = Button(self.button_frame, "Combine Selected", self.combine_selected, (1,1))
+
             
         self.slider_max = 500
         
         #sliders for min and max window selection
-        self.min_slider = tk.Scale(self.button_frame, from_=0, to=self.slider_max,
-                                   label="window min", orient=tk.HORIZONTAL)
+        self.min_label = tk.Label(self.button_frame, text="window min").grid(row =1, column = 1)
+        self.min_slider = tk.Scale(self.button_frame, from_=0, to=self.slider_max, orient=tk.HORIZONTAL)
         self.min_slider.bind("<ButtonRelease-1>", self.on_slider_move)
         self.min_slider.set(25)
         self.min_slider.grid(row = 1, column = 2)
         
-        self.max_slider = tk.Scale(self.button_frame, from_=0, to=self.slider_max,
-                           label="window max", orient=tk.HORIZONTAL)
+        self.max_label = tk.Label(self.button_frame, text="window max").grid(row =1, column = 3)
+        self.max_slider = tk.Scale(self.button_frame, from_=0, to=self.slider_max, orient=tk.HORIZONTAL)
         self.max_slider.bind("<ButtonRelease-1>", self.on_slider_move)
-        self.max_slider.set(100)
-        self.max_slider.grid(row = 1, column = 3)
+        self.max_slider.set(250)
+        self.max_slider.grid(row = 1, column = 4)
+        
+        self.button1 = Button(self.button_frame, "Combine Selected", self.combine_selected, (1,5))
+        self.amplitudes = Button(self.button_frame, "Amplitudes", self.on_amplitude_press, (1, 6))
+        self.latencies = Button(self.button_frame, "Latencies" , self.default_onclick, (1, 7))
+        self.save = Button(self.button_frame, "Save" , self.on_save, (1, 8))
         
         #-----end widgets-----
 
@@ -135,6 +140,14 @@ class MainApp(tk.Tk):
         for win in self.windows:
             self.windows[win].lift()
     
+    def on_amplitude_press(self):
+        selection = self.windows["Experiments"].get_selection(self.windows["Experiments"].file_list)
+        self.windows["Graph"].show_amplitudes([VEPdata.experiments[name] for name in selection])
+    
+    def on_latency_press(self):
+        selection = self.windows["Experiments"].get_selection(self.windows["Experiments"].file_list)
+        self.windows["Graph"].show_amplitudes([VEPdata.experiments[name] for name in selection])
+    
     #Open a file dialog and record selected filenames to self.file_names
     def load(self):
         files = tkFileDialog.askopenfilenames()
@@ -146,7 +159,7 @@ class MainApp(tk.Tk):
         self.subplot.clear()
         
         for datum in data:
-            self.subplot.plot(datum)
+            self.subplot.plot(datum, zorder = 0)
         self.subplot.set_yticklabels([])
         self.subplot.set_xticklabels([])
         self.subplot.set_axis_off()
@@ -159,11 +172,12 @@ class MainApp(tk.Tk):
         onsets.sort()
         offsets.sort()
         self.subplot.clear()
+
         self.plot([VEPdata.experiments[VEPdata.experiments.keys()[0]].timing])
-        onsets.sort()
-        offsets.sort()
+        
         for (onset, offset) in zip(onsets, offsets):
-            self.subplot.axvspan(onset, offset, alpha=0.5, color='red')
+            self.subplot.axvspan(onset, offset, alpha=0.5, color='red', zorder = 10)
+            
         self.canvas.draw()
     
     def combine_selected(self):
@@ -186,6 +200,12 @@ class MainApp(tk.Tk):
             self.max_slider.set(100)
         self.windows["Graph"].plot(self.windows["Graph"].last_plots)
         pass
+    
+    def on_save(self):
+        fn = tkFileDialog.asksaveasfilename(filetypes = [('pickle','.p')])
+        if fn is not None:
+            VEPdata.save(fn, VEPdata.experiments)
+        
               
 #-----Windows-----
 #Left Window
@@ -388,6 +408,22 @@ class GraphWindow(Window):
             return
         print mouse_x, mouse_y
     
+    def show_amplitudes(self, data):
+        self.subplot.clear()
+        for experiment in data:
+            amps = [stim.amplitude for stim in experiment.stims]
+            bins=np.arange(min(amps), max(amps) + 0.01, 0.01)
+            plt.hist(amps, bins=bins)
+        self.canvas.draw()
+    
+    def show_latencies(self, data):
+        self.subplot.clear()
+        for experiment in data:
+            mins = [stim.min[0] for stim in experiment.stims]
+            bins=np.arange(min(mins), max(mins) + 0.01, 0.01)
+            plt.hist(mins, bins=bins)
+        self.canvas.draw()
+            
     def plot(self, data):
         self.subplot.clear()
         self.last_plots = data
@@ -398,7 +434,8 @@ class GraphWindow(Window):
             
         for datum in data:
             datum.min = VEPdata.min_from_window(datum.signal, lower = wmin, upper = wmax)
-            datum.max = VEPdata.max_from_window(datum.signal, lower = wmin, upper = wmax)
+            datum.max = VEPdata.max_from_window(datum.signal, lower = datum.min[0], upper = wmax)
+            datum.amplitude = datum.max[1] - datum.min[1]
             
             #plt.plot(stim.signal)
             self.subplot.plot(datum.min[0],datum.min[1],marker='+', mew = 5, ms = 20, color='green')

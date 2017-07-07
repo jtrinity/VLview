@@ -9,6 +9,7 @@ math functions to work on stim and experiment data
 import numpy as np
 import Experiment
 from matplotlib import pyplot as plt
+import pickle as pickle
 
 
 
@@ -51,9 +52,15 @@ def open_file(filename):
         experiments[filename[0:-4]] = exp
         names.update(exp.stim_names)
 
+def amplitude(data, **kwargs):
+    return data.max[1] - data.min[1]
+    
 #Gives combined data
 def combine(data, **kwargs):
     return Experiment.CombinedStim("view", data, **kwargs)
+
+def save(filename, data):
+    pickle.dump(data, open(filename, "wb"))
 
 if __name__ == "__main__":
     files = ['C:/Users/jesse/Desktop/VLdata/SRP29_16cm_45d_yellow_d2_data.bin',

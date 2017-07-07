@@ -106,7 +106,10 @@ class Experiment:
         
         event_list = [x[1] for x in csv_timestamps]
         
+        print "csv " + str(len(event_list)) + " bin " +str(len(bin_timestamps)) 
         assert(len(event_list) == len(bin_timestamps))
+
+            
         
         
 #        start_padding = signal[0:bin_timestamps[0]]
@@ -135,11 +138,12 @@ class Experiment:
         for i in range(len(blocks)):
             interval = blocks[i]
             for stim_type in stimBlocks:
-
                 stims = [self.stims[j] for j in range(interval[0]+1, interval[1]) if self.stims[j].type == stim_type]
-                currentBlock = CombinedStim(' '.join([str(w) for w in stim_type]) + " Block " + str(i) + " " + self.short_name, stims, method = "average")
-                stimBlocks[stim_type].append(currentBlock)
-                self.stim_names[currentBlock.name] = currentBlock
+                #if scanned block contains any stim of selected type
+                if len(stims) > 0:
+                    currentBlock = CombinedStim(' '.join([str(w) for w in stim_type]) + " Block " + str(i) + " " + self.short_name, stims, method = "average")
+                    stimBlocks[stim_type].append(currentBlock)
+                    self.stim_names[currentBlock.name] = currentBlock
         
         grand_averages = [CombinedStim(' '.join([str(w) for w in stim_type]) + " Grand Average " + self.short_name, stimBlocks[stim_type]) for stim_type in stimBlocks]
         for average in grand_averages:
@@ -161,6 +165,7 @@ class Stim:
                 
         self.min=(signal.argmin(), signal.min(axis=0))
         self.max=(signal.argmax(), signal.max(axis=0))
+        self.amplitude = self.max[1] - self.min[1]
         
         self.onset = onset
         self.offset = offset
