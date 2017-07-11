@@ -109,7 +109,7 @@ class Experiment:
 
         #start_padding = signal[0:bin_timestamps[0]]
         #end_padding = signal[bin_timestamps[-1]:signal[-1]]
-        stims = [Stim("Stim "+str(i) + " "+self.short_name, signal[bin_timestamps[i]:bin_timestamps[i+1]], bin_timestamps[i], bin_timestamps[i+1], csv_timestamps[i]) for i in range(len(bin_timestamps)-1)]
+        stims = [Stim("Stim "+str(i).zfill(4) + " "+self.short_name, signal[bin_timestamps[i]:bin_timestamps[i+1]], bin_timestamps[i], bin_timestamps[i+1], csv_timestamps[i]) for i in range(len(bin_timestamps)-1)]
         stims.append(Stim("Start "+self.short_name, signal[0:bin_timestamps[0]], 0, bin_timestamps[0], (0, 'gray', '0')))
         stims.append(Stim("End "+ self.short_name, signal[bin_timestamps[-1]:len(signal)-1], bin_timestamps[-1], len(signal)-1, csv_timestamps[-1]))
 
@@ -123,24 +123,39 @@ class Experiment:
         #make list of unique stim types + orientations
         stim_types = self.stim_types()
         stim_types.remove('gray')
-
+        #add reversal 'stim type' if flip flops detected
+        if 'flip' in stim_types and 'flop' in stim_types:
+            stim_types.append('flip-flop')
+            
+        #remove integer zero orientation (gray/interstim interval)
         orientations = self.orientations()
         orientations.remove('0')
         
         unique_stims = list(itertools.product(stim_types, orientations))
         stimBlocks = {stim:list() for stim in unique_stims}
-        
         for i in range(len(blocks)):
             interval = blocks[i]
             for stim_type in stimBlocks:
                 stims = [self.stims[j] for j in range(interval[0]+1, interval[1]) if self.stims[j].type == stim_type]
+                #if reversal type...
+                if stim_type[0] == 'flip-flop':
+                    stims_flip = [self.stims[j] for j in range(interval[0]+1, interval[1]) if self.stims[j].type == ('flip',stim_type[1])]
+                    stims_flop = [self.stims[j] for j in range(interval[0]+1, interval[1]) if self.stims[j].type == ('flop',stim_type[1])]
+                    stims_flip.sort()
+                    stims_flop.sort()
+                    stims = [CombinedStim('flip-flop '+a.name[0:9]+'-'+b.name, [a,b], method = "average") for (a,b) in zip(stims_flip, stims_flop)]
+                    self.stim_names.update({stim.name:stim for stim in stims})
+                    
                 #if scanned block contains any stim of selected type
                 if len(stims) > 0:
                     currentBlock = CombinedStim(' '.join([str(w) for w in stim_type]) + " Block " + str(i) + " " + self.short_name, stims, method = "average")
                     stimBlocks[stim_type].append(currentBlock)
                     self.stim_names[currentBlock.name] = currentBlock
         
+            
         grand_averages = [CombinedStim(' '.join([str(w) for w in stim_type]) + " Grand Average " + self.short_name, stimBlocks[stim_type]) for stim_type in stimBlocks]
+        
+
         for average in grand_averages:
             self.stim_names[average.name] = average
         return grand_averages

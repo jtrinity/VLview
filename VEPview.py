@@ -125,9 +125,16 @@ class MainApp(tk.Tk):
 
         #self.subplot.set_aspect('auto')
         
+        toolbar_frame = tk.Frame(self.title_frame)
+        toolbar_frame.pack(side = tk.TOP)
+        
         self.canvas = FigureCanvasTkAgg(self.figure, self.title_frame)
         self.canvas.show()
         self.canvas.get_tk_widget().pack(side = tk.TOP, padx = 10, pady = 10, fill = tk.BOTH)
+        
+        toolbar = NavigationToolbar2TkAgg(self.canvas, toolbar_frame)
+        toolbar.update()
+        self.canvas._tkcanvas.pack(side = tk.BOTTOM)
         
         self.canvas._tkcanvas.pack(side = tk.BOTTOM)
         self.plot([[0 for i in range(500)]])
