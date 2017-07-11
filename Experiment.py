@@ -14,7 +14,7 @@ import itertools
 from os import path as path
 
 class Experiment:
-    def __init__(self, binfilename, csvfilename):
+    def __init__(self, binfilename, csvfilename, trigger):
         self.start_time = 0
         self.signal_channel = 0
         self.timing_channel = 2
@@ -26,7 +26,7 @@ class Experiment:
         
         self.short_name = path.split(csvfilename)[1]
         self.signal, self.timing = self.channels_from_trigger(binfilename, csvfilename)
-        self.bin_timestamps, self.csv_timestamps = self.get_timestamps(self.signal, self.timing)
+        self.bin_timestamps, self.csv_timestamps = self.get_timestamps(self.signal, self.timing, trigger)
         #self.flip_times, self.flop_times, self.flips, self.flops, self.flip_avgs, self.flop_avgs, self.trial_avgs = self.get_reversal_times(self.signal, self.bin_timestamps, self.csv_timestamps)
         self.stims = self.get_stims(self.signal, self.bin_timestamps, self.csv_timestamps)
         self.stims.sort()
@@ -73,26 +73,24 @@ class Experiment:
     
     
     #gets rising edge sample points. returns signal timestamps and csv file timestamps
-    def get_timestamps(self, signal, timing):
+    def get_timestamps(self, signal, timing, trigger):
         
         #cut off 500ms at ends
         buffer_samples = int(self.sampling_frequency / 2.0)
         bin_timestamps = list()
+        
+        #get onsets (singal LOW-> HIGH)
         for i in range(buffer_samples, len(timing)-buffer_samples):
             if timing[i+1] >= self.threshold and timing[i] < self.threshold:
+                bin_timestamps.append(i)
+            #get trigger (HIGH -> LOW as well if trigger type is continuous)
+            if trigger == 1 and timing[i+1] <= self.threshold and timing[i] > self.threshold:
                 bin_timestamps.append(i)
         
 #        print "deviant lengths"
         lengths = list()
         for i in range(1,len(bin_timestamps)):
             lengths.append(bin_timestamps[i]-bin_timestamps[i-1])
-#        for i in range(len(lengths)):
-#            if lengths[i] < 495 or lengths[i] > 505:
-#                print str(i) + " " + str(lengths[i])
-        
-        
-#        print "trigger count:"
-#        print len(bin_timestamps)
         
         csv_timestamps = list()
         
@@ -109,11 +107,8 @@ class Experiment:
         print "csv " + str(len(event_list)) + " bin " +str(len(bin_timestamps)) 
         assert(len(event_list) == len(bin_timestamps))
 
-            
-        
-        
-#        start_padding = signal[0:bin_timestamps[0]]
-#        end_padding = signal[bin_timestamps[-1]:signal[-1]]
+        #start_padding = signal[0:bin_timestamps[0]]
+        #end_padding = signal[bin_timestamps[-1]:signal[-1]]
         stims = [Stim("Stim "+str(i) + " "+self.short_name, signal[bin_timestamps[i]:bin_timestamps[i+1]], bin_timestamps[i], bin_timestamps[i+1], csv_timestamps[i]) for i in range(len(bin_timestamps)-1)]
         stims.append(Stim("Start "+self.short_name, signal[0:bin_timestamps[0]], 0, bin_timestamps[0], (0, 'gray', '0')))
         stims.append(Stim("End "+ self.short_name, signal[bin_timestamps[-1]:len(signal)-1], bin_timestamps[-1], len(signal)-1, csv_timestamps[-1]))

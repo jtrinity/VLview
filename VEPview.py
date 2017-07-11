@@ -81,6 +81,7 @@ class MainApp(tk.Tk):
             
         self.slider_max = 500
         
+        #ROW 1
         #sliders for min and max window selection
         self.min_label = tk.Label(self.button_frame, text="window min").grid(row =1, column = 1)
         self.min_slider = tk.Scale(self.button_frame, from_=0, to=self.slider_max, orient=tk.HORIZONTAL)
@@ -98,6 +99,18 @@ class MainApp(tk.Tk):
         self.amplitudes = Button(self.button_frame, "Amplitudes", self.on_amplitude_press, (1, 6))
         self.latencies = Button(self.button_frame, "Latencies" , self.default_onclick, (1, 7))
         self.save = Button(self.button_frame, "Save" , self.on_save, (1, 8))
+        
+        #ROW 2
+        #trigger type selection
+        trigger_label = tk.Label(self.button_frame, text = "trigger type:")
+        trigger_label.grid(row  = 2, column = 0)
+        self.trigger_type_var = tk.IntVar()
+        self.trigger_type_var.set(0)
+        self.pulse_trigger = tk.Radiobutton(self.button_frame, text = "pulse", variable = self.trigger_type_var, value = 0)
+        self.pulse_trigger.grid(row = 2, column = 1)
+        self.pulse_trigger = tk.Radiobutton(self.button_frame, text = "continuous", variable = self.trigger_type_var, value = 1)
+        self.pulse_trigger.grid(row = 2, column = 2)
+        
         
         #-----end widgets-----
 
@@ -266,7 +279,7 @@ class ExperimentWindow(Window):
         
         for fn in files:
             if fn[-4:] == ".csv":
-                VEPdata.open_file(fn)
+                VEPdata.open_file(fn, int(self.parent.trigger_type_var.get()))
         self.file_list.delete(0, tk.END)
         for key in VEPdata.experiments:
             self.file_list.insert(tk.END, key)
