@@ -61,4 +61,18 @@ def combine(data, **kwargs):
 
 def save(filename, data):
     pickle.dump(data, open(filename, "wb"))
+    
+def get_amplitude_data(data):
+    try:
+        #recursive case
+        amplitudes = {data[stim].name: {"amplitude":data[stim].amplitude,
+                      "min":data[stim].min,
+                      "max":data[stim].max,
+                      "stims":get_amplitude_data(data[stim].stims)} for stim in data}
+    except AttributeError:
+        #base case
+        return {data[stim].name: {"amplitude":data[stim].amplitude,
+                      "min":data[stim].min,
+                      "max":data[stim].max} for stim in data}
+    return amplitudes
 

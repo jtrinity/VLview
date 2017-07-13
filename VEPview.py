@@ -12,7 +12,7 @@ import tkFileDialog
 import VEPdata as VEPdata
 
 import matplotlib
-matplotlib.use("TkAgg", warn=False)
+#matplotlib.use("TkAgg", warn=False)
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
@@ -224,7 +224,8 @@ class MainApp(tk.Tk):
     def on_save(self):
         fn = tkFileDialog.asksaveasfilename(filetypes = [('pickle','.p')])
         if fn is not None:
-            VEPdata.save(fn, VEPdata.experiments)
+            to_save = {VEPdata.experiments[exp].short_name:VEPdata.get_amplitude_data(VEPdata.experiments[exp].root) for exp in VEPdata.experiments}
+            VEPdata.save(fn, to_save)
         
               
 #-----Windows-----
@@ -312,7 +313,7 @@ class ExperimentWindow(Window):
         self.parent.windows["Graph"].plot([VEPdata.experiments[filename] for filename in selection])
         for filename in selection:
             for stim in VEPdata.experiments[filename].root:
-                self.type_list.insert(tk.END, stim.name)
+                self.type_list.insert(tk.END, VEPdata.experiments[filename].root[stim].name)
     
 
     #callback for type_list

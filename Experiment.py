@@ -158,7 +158,7 @@ class Experiment:
 
         for average in grand_averages:
             self.stim_names[average.name] = average
-        return grand_averages
+        return {avg.name: avg for avg in grand_averages}
         
     def stim_types(self):
         return list(set([x[1] for x in self.csv_timestamps]))
