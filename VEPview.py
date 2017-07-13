@@ -18,8 +18,11 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from matplotlib.figure import Figure
 from matplotlib import style
 from matplotlib import pyplot as plt
-
 import numpy as np
+
+import platform
+
+
 
 style.use("bmh")
 
@@ -125,15 +128,15 @@ class MainApp(tk.Tk):
 
         #self.subplot.set_aspect('auto')
         
-        toolbar_frame = tk.Frame(self.title_frame)
-        toolbar_frame.pack(side = tk.TOP)
+#        toolbar_frame = tk.Frame(self.title_frame)
+#        toolbar_frame.pack(side = tk.TOP)
         
         self.canvas = FigureCanvasTkAgg(self.figure, self.title_frame)
         self.canvas.show()
         self.canvas.get_tk_widget().pack(side = tk.TOP, padx = 10, pady = 10, fill = tk.BOTH)
         
-        toolbar = NavigationToolbar2TkAgg(self.canvas, toolbar_frame)
-        toolbar.update()
+#        toolbar = NavigationToolbar2TkAgg(self.canvas, toolbar_frame)
+#        toolbar.update()
         self.canvas._tkcanvas.pack(side = tk.BOTTOM)
         
         self.canvas._tkcanvas.pack(side = tk.BOTTOM)
@@ -171,9 +174,10 @@ class MainApp(tk.Tk):
     #Open a file dialog and record selected filenames to self.file_names
     def load(self):
         files = tkFileDialog.askopenfilenames()
-        self.windows["Experiments"].add_files(files)
+        if len(files) > 0:
+            self.windows["Experiments"].add_files(files)
         
-        self.plot([VEPdata.experiments[VEPdata.experiments.keys()[0]].timing])
+            self.plot([VEPdata.experiments[VEPdata.experiments.keys()[0]].timing])
     
     def plot(self, data):
         self.subplot.clear()
@@ -271,7 +275,10 @@ class ExperimentWindow(Window):
         self.stim_list = tk.Listbox(stim_frame, selectmode="extended", exportselection=0, width = 50, height=30)
         self.stim_list.pack(side = tk.TOP, padx = 10, pady = 10)
         self.stim_list.bind('<<ListboxSelect>>', self.on_stim_select)
-        self.stim_list.bind('<Button-3>', self.on_stim_right_select)
+        if platform.system() == 'Mac':
+            self.stim_list.bind('<Button-2>', self.on_stim_right_select)
+        else:
+            self.stim_list.bind('<Button-3>', self.on_stim_right_select)
 
         
         

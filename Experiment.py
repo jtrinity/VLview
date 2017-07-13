@@ -148,7 +148,7 @@ class Experiment:
                     
                 #if scanned block contains any stim of selected type
                 if len(stims) > 0:
-                    currentBlock = CombinedStim(' '.join([str(w) for w in stim_type]) + " Block " + str(i) + " " + self.short_name, stims, method = "average")
+                    currentBlock = CombinedStim(' '.join([str(w) for w in stim_type]) + " Block " + str(i).zfill(4) + " " + self.short_name, stims, method = "average")
                     stimBlocks[stim_type].append(currentBlock)
                     self.stim_names[currentBlock.name] = currentBlock
         

@@ -60,7 +60,11 @@ def combine(data, **kwargs):
     return Experiment.CombinedStim("view", data, **kwargs)
 
 def save(filename, data):
-    pickle.dump(data, open(filename, "wb"))
+    try:
+        pickle.dump(data, open(filename, "wb"))
+    #ignore empy file name
+    except IOError:
+        pass
     
 def get_amplitude_data(data):
     try:
@@ -68,11 +72,13 @@ def get_amplitude_data(data):
         amplitudes = {data[stim].name: {"amplitude":data[stim].amplitude,
                       "min":data[stim].min,
                       "max":data[stim].max,
-                      "stims":get_amplitude_data(data[stim].stims)} for stim in data}
+                      "stims":get_amplitude_data(data[stim].stims),
+                      "signal":data[stim].signal} for stim in data}
     except AttributeError:
         #base case
         return {data[stim].name: {"amplitude":data[stim].amplitude,
                       "min":data[stim].min,
-                      "max":data[stim].max} for stim in data}
+                      "max":data[stim].max,
+                      "signal":data[stim].signal} for stim in data}
     return amplitudes
 
