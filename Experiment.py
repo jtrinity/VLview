@@ -86,6 +86,10 @@ class Experiment:
             #get trigger (HIGH -> LOW as well if trigger type is continuous)
             if trigger == 1 and timing[i+1] <= self.threshold and timing[i] > self.threshold:
                 bin_timestamps.append(i)
+        #Ignore offset on last trigger
+#        if trigger == 1:
+#            bin_timestamps.pop()
+            
         
 #        print "deviant lengths"
         lengths = list()
@@ -122,7 +126,10 @@ class Experiment:
         
         #make list of unique stim types + orientations
         stim_types = self.stim_types()
-        stim_types.remove('gray')
+        try:
+            stim_types.remove('gray')
+        except:
+            pass
         #add reversal 'stim type' if flip flops detected
         if 'flip' in stim_types and 'flop' in stim_types:
             stim_types.append('flip-flop')
@@ -152,7 +159,7 @@ class Experiment:
                     stimBlocks[stim_type].append(currentBlock)
                     self.stim_names[currentBlock.name] = currentBlock
         
-            
+        print stimBlocks
         grand_averages = [CombinedStim(' '.join([str(w) for w in stim_type]) + " Grand Average " + self.short_name, stimBlocks[stim_type]) for stim_type in stimBlocks]
         
 
