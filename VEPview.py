@@ -73,46 +73,53 @@ class MainApp(tk.Tk):
         #labels
         self.title_frame= tk.Frame(self)
         self.title_frame.pack(side = "top")
-              
+             
+        #ROW 1
         #Buttons
         self.button_frame = tk.Frame(self)
         self.button_frame.pack(side = "top")
         
         self.load_button = Button(self.button_frame, "Load Files", self.load, (1,0))
-                
+        
+        self.button1 = Button(self.button_frame, "Combine Selected", self.combine_selected, (1,1))
+        self.amplitudes = Button(self.button_frame, "Amplitudes", self.on_amplitude_press, (1, 2))
+        self.latencies = Button(self.button_frame, "Latencies" , self.default_onclick, (1, 3))
+        self.save = Button(self.button_frame, "Save" , self.on_save, (1, 4))
 
             
         self.slider_max = 500
         
-        #ROW 1
+        #ROW 2
         #sliders for min and max window selection
-        self.min_label = tk.Label(self.button_frame, text="window min").grid(row =1, column = 1)
+        self.min_label = tk.Label(self.button_frame, text="window min").grid(row =2, column = 0)
         self.min_slider = tk.Scale(self.button_frame, from_=0, to=self.slider_max, orient=tk.HORIZONTAL)
         self.min_slider.bind("<ButtonRelease-1>", self.on_slider_move)
         self.min_slider.set(25)
-        self.min_slider.grid(row = 1, column = 2)
+        self.min_slider.grid(row = 2, column = 1)
         
-        self.max_label = tk.Label(self.button_frame, text="window max").grid(row =1, column = 3)
+        self.max_label = tk.Label(self.button_frame, text="window max").grid(row =2, column = 2)
         self.max_slider = tk.Scale(self.button_frame, from_=0, to=self.slider_max, orient=tk.HORIZONTAL)
         self.max_slider.bind("<ButtonRelease-1>", self.on_slider_move)
         self.max_slider.set(250)
-        self.max_slider.grid(row = 1, column = 4)
+        self.max_slider.grid(row = 2, column = 3)
         
-        self.button1 = Button(self.button_frame, "Combine Selected", self.combine_selected, (1,5))
-        self.amplitudes = Button(self.button_frame, "Amplitudes", self.on_amplitude_press, (1, 6))
-        self.latencies = Button(self.button_frame, "Latencies" , self.default_onclick, (1, 7))
-        self.save = Button(self.button_frame, "Save" , self.on_save, (1, 8))
+        stim_length_label = tk.Label(self.button_frame, text = "stim length")
+        stim_length_label.grid(row = 2, column = 4)
+        self.stim_length_slider = tk.Scale(self.button_frame, from_=100, to=1000, orient = tk.HORIZONTAL)
+        self.stim_length_slider.grid(row = 2, column = 5)
+        self.use_manual_length = tk.IntVar()
+        self.use_manual_length_box = tk.Checkbutton(self.button_frame, text="set stim length", variable = self.use_manual_length).grid(row = 2, column =6)
         
-        #ROW 2
+        #ROW 3
         #trigger type selection
         trigger_label = tk.Label(self.button_frame, text = "trigger type:")
-        trigger_label.grid(row  = 2, column = 0)
+        trigger_label.grid(row  = 3, column = 0)
         self.trigger_type_var = tk.IntVar()
         self.trigger_type_var.set(0)
         self.pulse_trigger = tk.Radiobutton(self.button_frame, text = "pulse", variable = self.trigger_type_var, value = 0)
-        self.pulse_trigger.grid(row = 2, column = 1)
+        self.pulse_trigger.grid(row = 3, column = 1)
         self.pulse_trigger = tk.Radiobutton(self.button_frame, text = "continuous", variable = self.trigger_type_var, value = 1)
-        self.pulse_trigger.grid(row = 2, column = 2)
+        self.pulse_trigger.grid(row = 3, column = 2)
         
         
         #-----end widgets-----

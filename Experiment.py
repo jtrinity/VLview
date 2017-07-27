@@ -14,7 +14,7 @@ import itertools
 from os import path as path
 
 class Experiment:
-    def __init__(self, binfilename, csvfilename, trigger):
+    def __init__(self, binfilename, csvfilename, trigger, **kwargs):
         self.start_time = 0
         self.signal_channel = 0
         self.timing_channel = 2
@@ -23,6 +23,10 @@ class Experiment:
   
         self.binfilename = binfilename
         self.csvfilename = csvfilename
+        
+        self.stim_length = 0
+        if 'stim_length' in kwargs:
+            self.stim_length = kwargs['stim_length']
         
         self.short_name = path.split(csvfilename)[1]
         self.signal, self.timing = self.channels_from_trigger(binfilename, csvfilename)
@@ -99,7 +103,11 @@ class Experiment:
         csv_timestamps = list()
         
         for i in range(len(self.csvfile.timestamps)):
-            csv_timestamps.append((int(float(self.csvfile.timestamps[i][0])*self.sampling_frequency - self.start_time), self.csvfile.timestamps[i][1], self.csvfile.timestamps[i][2]))
+            ts = [int(float(self.csvfile.timestamps[i][0])*self.sampling_frequency - self.start_time)]
+            events = [self.csvfile.timestamps[i][j] for j in range(1,len(self.csvfile.timestamps[i]))]
+            #csv_timestamps.append((int(float(self.csvfile.timestamps[i][0])*self.sampling_frequency - self.start_time), self.csvfile.timestamps[i][1], self.csvfile.timestamps[i][2]))
+            csv_timestamps.append(tuple(ts+events))
+        print csv_timestamps
         
         return bin_timestamps, csv_timestamps
         
@@ -113,7 +121,10 @@ class Experiment:
 
         #start_padding = signal[0:bin_timestamps[0]]
         #end_padding = signal[bin_timestamps[-1]:signal[-1]]
-        stims = [Stim("Stim "+str(i).zfill(4) + " "+self.short_name, signal[bin_timestamps[i]:bin_timestamps[i+1]], bin_timestamps[i], bin_timestamps[i+1], csv_timestamps[i]) for i in range(len(bin_timestamps)-1)]
+        if self.stim_length > 0:
+            stims = [Stim("Stim "+str(i).zfill(4) + " "+self.short_name, signal[bin_timestamps[i]:bin_timestamps[i]+self.stim_length], bin_timestamps[i], bin_timestamps[i]+self.stim_length, csv_timestamps[i]) for i in range(len(bin_timestamps)-1)]
+        else:
+            stims = [Stim("Stim "+str(i).zfill(4) + " "+self.short_name, signal[bin_timestamps[i]:bin_timestamps[i+1]], bin_timestamps[i], bin_timestamps[i+1], csv_timestamps[i]) for i in range(len(bin_timestamps)-1)]
         stims.append(Stim("Start "+self.short_name, signal[0:bin_timestamps[0]], 0, bin_timestamps[0], (0, 'gray', '0')))
         stims.append(Stim("End "+ self.short_name, signal[bin_timestamps[-1]:len(signal)-1], bin_timestamps[-1], len(signal)-1, csv_timestamps[-1]))
 
@@ -159,7 +170,7 @@ class Experiment:
                     stimBlocks[stim_type].append(currentBlock)
                     self.stim_names[currentBlock.name] = currentBlock
         
-        print stimBlocks
+        #print stimBlocks
         grand_averages = [CombinedStim(' '.join([str(w) for w in stim_type]) + " Grand Average " + self.short_name, stimBlocks[stim_type]) for stim_type in stimBlocks]
         
 
