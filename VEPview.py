@@ -235,7 +235,11 @@ class MainApp(tk.Tk):
     def on_save(self):
         fn = tkFileDialog.asksaveasfilename(filetypes = [('pickle','.p')])
         if fn is not None:
-            to_save = {VEPdata.experiments[exp].short_name:{"raw signal":VEPdata.experiments[exp].signal,"stims":VEPdata.get_amplitude_data(VEPdata.experiments[exp].root)} for exp in VEPdata.experiments}
+            to_save = {VEPdata.experiments[exp].short_name:{"raw signal":VEPdata.experiments[exp].signal,
+            "bin timestamps":VEPdata.experiments[exp].bin_timestamps,
+            "csv timestamps":VEPdata.experiments[exp].csv_timestamps,
+            "timestamp signal":VEPdata.experiments[exp].timing,
+            "stims":VEPdata.get_amplitude_data(VEPdata.experiments[exp].root)} for exp in VEPdata.experiments}
             VEPdata.save(fn, to_save)
         
               
