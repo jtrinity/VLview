@@ -46,9 +46,12 @@ def max_from_window(data, **kwargs):
     return arg_maximum, maximum
 
 #called by VEPview when csv files are selected - opens csv and bin files
-def open_file(filename, trigger):
+def open_file(filename, trigger, *args):
         binfile = filename[0:-4] + "_data.bin"
-        exp = Experiment.Experiment(binfile, filename, trigger)
+        if len(args) == 0: 
+            exp = Experiment.Experiment(binfile, filename, trigger)
+        if len(args) == 1:
+            exp = Experiment.Experiment(binfile, filename, trigger, stim_length=args[0])
         experiments[filename[0:-4]] = exp
         names.update(exp.stim_names)
 

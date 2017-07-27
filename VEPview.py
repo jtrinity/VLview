@@ -305,7 +305,10 @@ class ExperimentWindow(Window):
         
         for fn in files:
             if fn[-4:] == ".csv":
-                VEPdata.open_file(fn, int(self.parent.trigger_type_var.get()))
+                if int(self.parent.use_manual_length.get()) == 1:
+                    VEPdata.open_file(fn, int(self.parent.trigger_type_var.get()),int(self.parent.stim_length_slider.get()))
+                else:
+                    VEPdata.open_file(fn, int(self.parent.trigger_type_var.get()))
         self.file_list.delete(0, tk.END)
         for key in VEPdata.experiments:
             self.file_list.insert(tk.END, key)
